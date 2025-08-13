@@ -114,7 +114,7 @@ section.wizard
                 +checkbox(question.name, question._id, question.onlyIf, question.description, question.isUber, question.isUnique)
 
   //- Hidden data (for client-side javascript)
-  div.wb-inv(aria-live="polite")T
+  div.wb-inv(aria-live="polite")
     p.disabledQuestions.hidden Nothing disabled
   .hidden(id=`question-data-step${step}`)
     each question in question_list
