@@ -3,8 +3,8 @@ extends layout
 block content
   h1#wb-cont(property='name')= title
   //- h3 About
-  p This tool allows users to answer a series of questions relating to what their procurement or solution does #[strong not] contain, and then create a customized partial version of the EN standard in both official languages, English or Canadian French. Selecting the checkboxes for these questions in steps 1, 2, and 3 removes their associated provisions from the documents in step 5. Each step provides increasingly more precise levels of refinement for the provisions to be included, based on the previous steps’ selections. This allows the user to create a focused and more actively relevant set of Information and Communications Technology (ICT) accessibility requirements for their project or procurement.
-  p For Business Owners/ Technical Authorities with the Government of Canada, this tool can be used to narrow down the requirements to be specific to the solution and/or service you are looking to purchase or build. The wizard output should be provided to your bidders as part of the solicitation process.
+  p This tool allows users to answer a series of questions relating to what is #[strong not] true about a  product or service and then create a filtered partial version of the EN standard. The tool and reports are provided in both official languages, English or Canadian French. Selecting the checkboxes for these questions in steps 1, 2, and 3 removes their associated provisions from the documents in step 5. Each step provides increasingly more precise levels of refinement for the provisions to be included, based on the previous steps’ selections. This allows the user to create a focused set of Information and Communications Technology (ICT) accessibility requirements.
+  p For Business Owners/ Technical Authorities with the Government of Canada, this tool can be used to narrow down the requirements to be specific to the solution and/or service you are looking to procure or build. The wizard output should be provided to your bidders as part of the solicitation process and it is important to only checked the boxes which you are sure do not apply to your bidders potential solutions.
   hr
   form(novalidate='novalidate' method='POST')
     input(type="hidden" id="selectedQuestions" name="questions" value="")
@@ -74,11 +74,11 @@ block content
         li Select all/Deselect all buttons to uncheck or check all checkboxes in this step. This works the same way as manually checking or unchecking the checkboxes and will impact the options in Steps 2 and 3 in the same way
         li Show removed/Hide remove buttons will show or hide hidden checkboxes. This allows you to see what the tool has automatically hidden because of previous selections
         li Undo will revert the last check/uncheck or selecting Select all/Deselect all
-      p If you would like to resume editing from a previously created annex, you can use the “Resume editing” button to open a dialog to copy and paste the list of the previous selections which will clear any selections you have made and reapply them.
+      p If you would like to resume editing from a previously created annex, you can use the “Load selections from previous output” button to open a dialog to copy and paste the list of the previous selections which will clear any selections you have made and reapply them.
       p Once you have finished making your selections select “next” to move to the next step, but you can return here if needed to adjust your selections.
       p Note 1: It is important to consider what could be included in the project or procurement, and to only remove items which you are sure do not apply. Many of these categories will be obvious such as removing hardware from a software-based solution. When it is less obvious consider using the help dialog located next to each item to get some additional context before making your selection.
       p Note 2: it is a common mistake to assume that a web-based solution means you select all the checkboxes (other than for websites). This is rarely appropriate as most web-based solutions apply to many of the other categories such as authoring tools, product documentation, support services or the audio video provisions.
-      p Note 3: The “resume editing” feature uses an exact string match to locate the appropriate selections, so it is important to copy them exactly.
+      p Note 3: The “Load selections from previous output” feature uses an exact string match to locate the appropriate selections, so it is important to copy them exactly.
   section.wb-overlay.modal-content.overlay-def.wb-popup-mid#instructionsStep2(role='dialog')
     header.modal-header
       h2.modal-title Instructions: Step 2
@@ -107,7 +107,7 @@ block content
     header.modal-header
       h2.modal-title Instructions: Step 4
     .modal-body
-      p Step 4 is a review step which shows which selections will be included in the documents you download in Step 5 in a tree view. If you notice that there are any errors, go back to Steps 1, 2, or 3 to adjust your selections before proceeding to Step 5.
+      p Step 4 is a review step which shows which selections will be included in the documents you download in Step 5 and is presented as a tree. If you notice that there are any errors, go back to Steps 1, 2, or 3 to adjust your selections before proceeding to Step 5.
       p Tips for using the clause tree:
       ul
         li To expand or collapse parts of the tree with the mouse, click the arrow next to the clause you wish to expand. Or, click in the blank space next to the clause name.
@@ -119,14 +119,14 @@ block content
     .modal-body
       p Step 5 offers options to download two documents in both English and Canadian French as follows:
       ul
-        li Requirements with informative sections (Annex X) – which is the selections made in Steps 1, 2, and 3 including all informative clauses as well as some additional information such as definitions and tables and figures
-        li List of testable clauses (Annex Y) which, based on the ICT identified in Annex X, lists  the provisions which have testable criteria in them.
+        li ICT accessibility requirements with informative sections – which is the remaining provisions after selections in Steps 1, 2, and 3 have been removed. this document includes all informative clauses as well as some additional information such as definitions and relationships to Functional Performance Criteria
+        li List of testable ICT accessibility requirements - Only lists  the provisions which can be evaluated for conformance based on the selections.
       p Note: Renaming the downloaded documents to more appropriate names is encouraged.
       h3 Microsoft Word document formatting
       p This tool currently has some limitations on how well it can format the resulting Word documents due to the underlying technology used and it is recommended that you consider manually updating:
       h4 For all downloads
       p Convert to the latest Microsoft Word document format by navigating to File > Info and selecting “convert”
-      h4 Annex X
+      h4 ICT accessibility requirements with informative sections 
       ul
         li Insert page breaks at the start of the annexes
         li Insert/adjust page breaks to ensure that the captions associated to the annex with the “tables and figures” remain on the same page
@@ -138,10 +138,10 @@ block content
       p Note: Make sure that the notes (which are in French) are not set to English
   section.wb-overlay.modal-content.overlay-def.wb-popup-mid#restoreModal(role='dialog')
     header.modal-header
-      h2.modal-title Enter previous selections
+      h2.modal-title Load selections from previous output
     .modal-body
-      p Paste the bulleted list of the selections made from annex X to resume editing .
-      p The previous selections can be found in the "scope" section of the output which precedes the table of clauses and should look something like:
+      p Paste the bulleted list of the selections made to resume editing.
+      p The previous selections can be found in the "scope" section of the output and should look something like:
       ul
         li Is not and does not include a web page;
         li Is not and does not include a non-web document and
