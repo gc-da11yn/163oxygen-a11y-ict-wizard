@@ -1,5 +1,8 @@
 const async = require('async');
 const mongoose = require('mongoose');
+const fs = require("fs");
+const mammoth = require("mammoth");
+
 
 const { JSDOM } = require('jsdom');
 const innertext = require('innertext');
@@ -15,16 +18,17 @@ const strings = {
   deleteClause: 'Delete clause',
   editClause: 'Edit clause',
   clauseNotFound: 'Clause not found',
-  updateClause: 'Update clause'
+  updateClause: 'Update clause',
+  clauseloader: 'bulk clause loader'
 }
 
-exports.clause_json_restore_post= (req, res, next) => {
+exports.clause_json_restore_post = (req, res, next) => {
   console.log("In server. Form data");
   const JavaClauseFile = req.body;
 
   function convertToMongoFormat(javaContent) {
     try {
-      return javaContent.map(item => { 
+      return javaContent.map(item => {
         if (item._id && item._id.$oid) {
           let clauseOID = item._id.$oid
           item._id = mongoose.Types.ObjectId(clauseOID);
@@ -52,32 +56,32 @@ exports.clause_json_restore_post= (req, res, next) => {
   }
 
   updateClauseCollection()
-    .then(() => res.json({ message: 'Data updated successfully. Please note that when you close this modal the page will refresh to show the updated data.', success: true  }))
+    .then(() => res.json({ message: 'Data updated successfully. Please note that when you close this modal the page will refresh to show the updated data.', success: true }))
     .catch((err) => res.status(500).json({ message: 'Error updating data.', success: false }));
 }
 
 exports.clause_json_get = (req, res, next) => {
 
   Clause.find()
-  .sort([['number', 'ascending']])
-  .lean()
-  .exec((err, clauses) => {
-    if (err) {
-      return next(err);
-    }
+    .sort([['number', 'ascending']])
+    .lean()
+    .exec((err, clauses) => {
+      if (err) {
+        return next(err);
+      }
 
-    const transformedClauses = clauses.map(clause => {
-      clause._id = { "$oid": clause._id.toString() };
+      const transformedClauses = clauses.map(clause => {
+        clause._id = { "$oid": clause._id.toString() };
 
-      return clause;
+        return clause;
+      });
+
+      const clausesData = JSON.stringify(transformedClauses, null, 2);
+
+      // Send the data as a downloadable file
+      res.setHeader('Content-disposition', 'attachment; filename=clauses_list.json');
+      res.send(clausesData);
     });
-
-    const clausesData = JSON.stringify(transformedClauses, null, 2);
-    
-    // Send the data as a downloadable file
-    res.setHeader('Content-disposition', 'attachment; filename=clauses_list.json');
-    res.send(clausesData);
-  });
 };
 
 // Display list of all Clauses
@@ -348,7 +352,7 @@ exports.clause_populate = (req, res, next) => {
 // "  " replaced with " " until none left
 // </ol> <ol(.*?)> replaced with (nothing)
 // <li> <p>(.+?)</p> replaced with <li>$1</li>
-const regexHtml = function(htmlString) {
+const regexHtml = function (htmlString) {
   // Perform string replaces as described above on htmlString
   htmlString = htmlString.replace(/\s\s+/gm, ' ');
   htmlString = htmlString.replace(/<p class="NormalBOLD"(.*?)> (.*?) <\/p>/gm, '<p><strong>$2</strong></p>');
@@ -363,6 +367,24 @@ const regexHtml = function(htmlString) {
   htmlString = htmlString.replace(/<a(.*?)style="(.*?)"/gm, '<a$1');
   htmlString = htmlString.replace(/\.<\/a>/gm, '</a>.');
   htmlString = htmlString.replace(/\. <\/a>/gm, '</a>.');
-  console.log(htmlString.substring(0,1000));
+  console.log(htmlString.substring(0, 1000));
   return htmlString;
+};
+
+// Display clause loader form on GET
+exports.clause_loader_get = (req, res, next) => {
+  res.render('clause_loader', {
+    title: strings.clauseloader,
+    breadcrumbs: [
+      { url: '/', text: 'Home' },
+      { url: '/edit', text: 'Edit content' },
+      { url: '/edit/clause_loader', text: 'Bulk clause loader' }
+    ]
+  });
+};
+// handle the post for clause loader. This is where the file is recieved and processed.
+exports.clause_loader_post = (req, res, next) => {
+  console.log("in the post for the loader ");
+const wordFiles= req.files;
+console.log(wordFiles.length);
 }

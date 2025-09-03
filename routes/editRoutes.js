@@ -23,8 +23,11 @@ router.post('/infosrestore', info_controller.info_json_restore_post);
 // GET request for list of all Clauses
 router.get('/clauses', clause_controller.clause_list);
 
+
 // GET request for creating a Clause
 router.get('/clause/create', clause_controller.clause_create_get);
+// GET for clause loader
+router.get('/clause_loader', clause_controller.clause_loader_get);
 
 // POST request for creating a Clause
 router.post('/clause/create', clause_controller.clause_create_post);
@@ -34,6 +37,9 @@ router.get('/clause/:id', clause_controller.clause_update_get);
 
 // POST request to edit Clause
 router.post('/clause/:id', clause_controller.clause_update_post);
+// post for clause loader
+router.post('/clause_loader', clause_controller.clause_loader_post);
+
 
 // GET request to delete Clause
 router.get('/clause/:id/delete', clause_controller.clause_delete_get);
