@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() }); // or configure as needed
 
 // Require controller modules.
 const clause_controller = require('../controllers/clauseController');
@@ -38,7 +40,10 @@ router.get('/clause/:id', clause_controller.clause_update_get);
 // POST request to edit Clause
 router.post('/clause/:id', clause_controller.clause_update_post);
 // post for clause loader
-router.post('/clause_loader', clause_controller.clause_loader_post);
+router.post('/clause_loader', upload.fields([
+  { name: 'englishfile', maxCount: 1 },
+  { name: 'frenchfile', maxCount: 1 }
+]), clause_controller.clause_loader_post);
 
 
 // GET request to delete Clause

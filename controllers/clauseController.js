@@ -382,9 +382,80 @@ exports.clause_loader_get = (req, res, next) => {
     ]
   });
 };
+async function updateFromWordFiles(englishFile, frenchFile) {
+  const mammoth = require("mammoth");
+  const { JSDOM } = require("jsdom");
+
+  // 1. Convert both files to HTML strings using mammoth
+  const englishHtmlResult = await mammoth.convertToHtml({ buffer: englishFile.buffer });
+  const frenchHtmlResult = await mammoth.convertToHtml({ buffer: frenchFile.buffer });
+  const englishHtml = englishHtmlResult.value;
+  const frenchHtml = frenchHtmlResult.value;
+
+  // 2. Extract only the first table in each file
+  const englishDom = new JSDOM(englishHtml);
+  const frenchDom = new JSDOM(frenchHtml);
+
+  const englishTable = englishDom.window.document.querySelector("table");
+  const frenchTable = frenchDom.window.document.querySelector("table");
+
+  // 3. Break down each table into an array containing the HTML contents of each row and parse fields
+  function extractRows(tableElement) {
+    if (!tableElement) return [];
+    const rows = Array.from(tableElement.querySelectorAll("tr"));
+    return rows.map(row => {
+      const cells = Array.from(row.querySelectorAll("td"));
+      if (cells.length === 0) return null;
+      const htmlBlob = cells[0].innerHTML;
+
+      // Create a temporary DOM to parse the HTML blob
+      const tempDiv = tableElement.ownerDocument.createElement('div');
+      tempDiv.innerHTML = htmlBlob;
+console.log("starting processing");
+console.log(tempDiv.firstChild.textContent);
+      
+      let number = '', name = '', description = '', compliance = '';
+  const firstLine = tempDiv.firstChild.textContent.trim();
+        const spaceId = firstLine.indexOf(' ');
+        if (spaceId> 0) {
+          number = firstLine.substring(0, spaceId).trim();
+          name = firstLine.substring(spaceId+ 1).trim();
+        }
+          console.log("finishing parsing");
+console.log(number);
+console.log(name);
+
+
+      return { number, name, description, compliance };
+    }).filter(Boolean);
+  }
+
+  const englishRows = extractRows(englishTable);
+  const frenchRows = extractRows(frenchTable);
+
+  // For debugging/demo purposes:
+  //console.log("English table rows:", englishRows);
+//  console.log("French table rows:", frenchRows);
+
+  // Return or process as needed
+  return { englishRows, frenchRows };
+}
+
 // handle the post for clause loader. This is where the file is recieved and processed.
-exports.clause_loader_post = (req, res, next) => {
-  console.log("in the post for the loader ");
-const wordFiles= req.files;
-console.log(wordFiles.length);
+exports.clause_loader_post = async (req, res, next) => {
+  const files = req.files;
+  if (!files || !files.englishfile || !files.frenchfile) {
+    return res.status(400).send('Both English and French files are required.');
+  }
+  const englishFile = files.englishfile[0];
+  const frenchFile = files.frenchfile[0];
+  console.log('English file:', englishFile.originalname, 'size:', englishFile.size);
+  console.log('French file:', frenchFile.originalname, 'size:', frenchFile.size);
+
+  try {
+    await updateFromWordFiles(englishFile, frenchFile);
+    res.send('Files uploaded and processed successfully.');
+  } catch (err) {
+    next(err);
+  }
 }

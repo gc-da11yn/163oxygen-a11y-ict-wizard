@@ -8,8 +8,8 @@ block form
   form(method='POST' action='clause_loader' enctype="multipart/form-data")
     .form-group
       label(for= "englishfile") Upload the new English word file
-      input(type="file" id="englishfile" accept=".docx")
+      input(type="file" id="englishfile" name="englishfile" accept=".docx")
     .form-group
       label(for= "frenchfile") Upload the new French word file
-      input(type="file" id="frenchfile" accept=".docx")
+      input(type="file" id="frenchfile" name="frenchfile" accept=".docx")
     button.btn.btn-primary(type='submit') Submit
