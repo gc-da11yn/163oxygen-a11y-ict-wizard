@@ -382,6 +382,9 @@ exports.clause_loader_get = (req, res, next) => {
     ]
   });
 };
+
+
+
 async function updateFromWordFiles(englishFile, frenchFile) {
   const mammoth = require("mammoth");
   const { JSDOM } = require("jsdom");
@@ -411,8 +414,8 @@ async function updateFromWordFiles(englishFile, frenchFile) {
       // Create a temporary DOM to parse the HTML blob
       const tempDiv = tableElement.ownerDocument.createElement('div');
       tempDiv.innerHTML = htmlBlob;
-console.log("starting processing");
       let number = '', name = '', description = '', compliance = '';
+      // number and name
   const firstLine = tempDiv.firstChild.textContent.trim();
         const spaceId = firstLine.indexOf(' ');
         if (spaceId> 0) {
@@ -423,39 +426,39 @@ console.log("starting processing");
         const children = tempDiv.childNodes;
         let relationshipToFPCFound = false;
         for (let i =1; i<children.length; i++) {
-console.log("in loop " + children[i].textContent);
-          if (children[i].textContent.startsWith("Relationship to Functional Performance Criteria")) {
-  console.log("found relationship to FPC");
+          if (children[i].textContent.startsWith("Relationship to Functional Performance Criteria") || children[i].textContent.startsWith("Relation avec")) {
             relationshipToFPCFound = true;
+            // continue as we don't wish to add this child to either description or compliance
 continue;
 }
 if (!relationshipToFPCFound) {
           description += children[i].outerHTML;
 } else {
-  console.log("adding compliance");
   compliance += children[i].outerHTML;
 }
         }  //for loop     
-        console.log("finishing parsing");
-console.log(number);
-console.log(name);
-//console.log(description);
-console.log("compliance");
-console.log(compliance);
-
-
       return { number, name, description, compliance };
     }).filter(Boolean);
   }
 
   const englishRows = extractRows(englishTable);
-  const frenchRows = extractRows(frenchTable);
+  let frenchRows = extractRows(frenchTable);
+
+  // Map frenchRows to rename fields as required
+  frenchRows = frenchRows.map(row => ({
+    number: row.number,
+    frName: row.name,
+    frDescription: row.description,
+    frCompliance: row.compliance
+  }));
 
   // For debugging/demo purposes:
-  //console.log("English table rows:", englishRows);
-//  console.log("French table rows:", frenchRows);
+  console.log("English table rows:", englishRows);
+  console.log("French table rows:", frenchRows);
 
   // Return or process as needed
+  updateData(englishRows);
+  updateData(frenchRows);
   return { englishRows, frenchRows };
 }
 
@@ -475,5 +478,26 @@ exports.clause_loader_post = async (req, res, next) => {
     res.send('Files uploaded and processed successfully.');
   } catch (err) {
     next(err);
+  }
+}
+
+async function updateData(rows) {
+  if (!Array.isArray(rows)) return;
+  for (const row of rows) {
+    if (!row.number) continue;
+    // Build update object based on available fields
+//    let update = {};
+    //if (row.name !== undefined) update.name = row.name;
+    //if (row.description !== undefined) update.description = row.description;
+    //if (row.compliance !== undefined) update.compliance = row.compliance;
+    //if (row.frName !== undefined) update.frName = row.frName;
+    //if (row.frDescription !== undefined) update.frDescription = row.frDescription;
+    //if (row.frCompliance !== undefined) update.frCompliance = row.frCompliance;
+    // Find and update the clause by number
+    await Clause.findOneAndUpdate(
+      { number: row.number },
+      { $set: row},
+      { new: true }
+    ).exec();
   }
 }
