@@ -412,8 +412,6 @@ async function updateFromWordFiles(englishFile, frenchFile) {
       const tempDiv = tableElement.ownerDocument.createElement('div');
       tempDiv.innerHTML = htmlBlob;
 console.log("starting processing");
-console.log(tempDiv.firstChild.textContent);
-      
       let number = '', name = '', description = '', compliance = '';
   const firstLine = tempDiv.firstChild.textContent.trim();
         const spaceId = firstLine.indexOf(' ');
@@ -421,9 +419,29 @@ console.log(tempDiv.firstChild.textContent);
           number = firstLine.substring(0, spaceId).trim();
           name = firstLine.substring(spaceId+ 1).trim();
         }
-          console.log("finishing parsing");
+        // description and compliance 
+        const children = tempDiv.childNodes;
+        let relationshipToFPCFound = false;
+        for (let i =1; i<children.length; i++) {
+console.log("in loop " + children[i].textContent);
+          if (children[i].textContent.startsWith("Relationship to Functional Performance Criteria")) {
+  console.log("found relationship to FPC");
+            relationshipToFPCFound = true;
+continue;
+}
+if (!relationshipToFPCFound) {
+          description += children[i].outerHTML;
+} else {
+  console.log("adding compliance");
+  compliance += children[i].outerHTML;
+}
+        }  //for loop     
+        console.log("finishing parsing");
 console.log(number);
 console.log(name);
+//console.log(description);
+console.log("compliance");
+console.log(compliance);
 
 
       return { number, name, description, compliance };
