@@ -247,130 +247,6 @@ exports.clause_delete_post = (req, res, next) => {
   });
 };
 
-// Populate clauses from HTML files
-// HTML converted from Word at docconverter.pro
-exports.clause_populate = (req, res, next) => {
-
-  // Convert HTML to array of objects following database schema:
-  /* clause = {
-    number: c.number,
-    name: c.name,
-    frName: c.frName,
-    informative: c.informative === 'on',
-    description: c.description,
-    frDescription: c.frDescription,
-    compliance: c.compliance,
-    frCompliance: c.frCompliance
-  } */
-
-  JSDOM.fromFile('english.html').then(dom => {
-    console.log("file loaded");
-    let document = dom.window.document;
-
-    // Replace DOM body with modified htmlString
-    let htmlString = document.querySelector('body').innerHTML;
-    document.querySelector('body').innerHTML = regexHtml(htmlString);
-
-    // Extract clauses
-    let clauses = [];
-    let rows = document.querySelectorAll('tbody tr');
-    for (let i = 0; i < rows.length; i++) {
-      let clause = {};
-      let cells = rows[i].querySelectorAll('td');
-      // Extract clause information from HTML and add to clause object
-      let descriptionCell = cells[0];
-      let complianceCell = cells[1];
-      let clauseNameNumber = innertext(descriptionCell.querySelector('p').innerHTML).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      clause.number = clauseNameNumber.substr(0, clauseNameNumber.indexOf(" "));
-      clause.name = clauseNameNumber.substr(clauseNameNumber.indexOf(" ") + 1);
-      clause.informative = clauseNameNumber.indexOf("nformative") > -1;
-      let descriptionHTML = descriptionCell.innerHTML;
-      clause.description = descriptionHTML.substr(descriptionHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      let complianceHTML = complianceCell.innerHTML;
-      clause.compliance = complianceHTML.substr(complianceHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      clauses.push(clause);
-    }
-
-    // Add French HTML content, asserting that clause numbers are equal
-    JSDOM.fromFile('french.html').then(dom => {
-      let document = dom.window.document;
-
-      // Replace DOM body with modified htmlString
-      let htmlString = document.querySelector('body').innerHTML;
-      document.querySelector('body').innerHTML = regexHtml(htmlString);
-
-      // Extract clauses
-      let rows = document.querySelectorAll('tbody tr');
-      console.log(`English clauses length is ${clauses.length}, french rows is ${rows.length}`);
-      for (let i = 0; i < rows.length; i++) {
-        // Get clause with English information
-        let clause = clauses[i];
-        let cells = rows[i].querySelectorAll('td');
-        // Extract clause information from HTML and add to clause object
-        let descriptionCell = cells[0];
-        let complianceCell = cells[1];
-        let clauseNameNumber = innertext(descriptionCell.querySelector('p').innerHTML).replace(/(\r\n|\n|\r)/gm, " ").trim();
-        clause.frName = clauseNameNumber.substr(clauseNameNumber.indexOf(" ") + 1);
-        let descriptionHTML = descriptionCell.innerHTML;
-        clause.frDescription = descriptionHTML.substr(descriptionHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-        let complianceHTML = complianceCell.innerHTML;
-        clause.frCompliance = complianceHTML.substr(complianceHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      }
-
-      // Array of clauses is now populated. Insert documents in database.
-      for (c of clauses) {
-        let clause = new Clause(c);
-
-        clause.save((err) => {
-          if (err) { return next(err); }
-          // Clause saved
-          // console.log(`Inserted clause: ${clause.number} ${clause.name}`);
-        });
-      }
-      res.redirect('/edit/clauses'); // Success - go to clause list
-    });
-  });
-
-};
-
-// Replaces:
-
-// <p class="NormalBOLD"(.*?)>\n(.*?)\n(.*?)</p>
-// <p><strong>$2</strong></p>
-
-// <td[^>]*> replaced with <td>
-// <p[^>]*> replaced with <p>
-// <ul[^>]*> replaced with <ul>
-// <li[^>]*> replaced with <li>
-// <span[^>]*> replaced with (nothing)
-// </span> replaced with (nothing)
-
-// <ol style="margin:0pt; padding-left:0pt; list-style-type:lower-latin">
-// <ol style="list-style-type:lower-latin">
-
-// \n and \t replaced with " "
-// "  " replaced with " " until none left
-// </ol> <ol(.*?)> replaced with (nothing)
-// <li> <p>(.+?)</p> replaced with <li>$1</li>
-const regexHtml = function (htmlString) {
-  // Perform string replaces as described above on htmlString
-  htmlString = htmlString.replace(/\s\s+/gm, ' ');
-  htmlString = htmlString.replace(/<p class="NormalBOLD"(.*?)> (.*?) <\/p>/gm, '<p><strong>$2</strong></p>');
-  htmlString = htmlString.replace(/<td(.*?)>/gm, '<td>');
-  htmlString = htmlString.replace(/<p(.*?)>/gm, '<p>');
-  htmlString = htmlString.replace(/<ul(.*?)>/gm, '<ul>');
-  htmlString = htmlString.replace(/<li(.*?)>/gm, '<li>');
-  htmlString = htmlString.replace(/<span(.*?)>/gm, '');
-  htmlString = htmlString.replace(/<\/span>/gm, '');
-  htmlString = htmlString.replace(/<ol style="margin:0pt; padding-left:0pt; list-style-type:lower-latin">/gm, '<ol style="list-style-type:lower-alpha">');
-  htmlString = htmlString.replace(/<\/ol> <ol(.*?)>/gm, '');
-  htmlString = htmlString.replace(/<a(.*?)style="(.*?)"/gm, '<a$1');
-  htmlString = htmlString.replace(/\.<\/a>/gm, '</a>.');
-  htmlString = htmlString.replace(/\. <\/a>/gm, '</a>.');
-  console.log(htmlString.substring(0, 1000));
-  return htmlString;
-};
-
 // Display clause loader form on GET
 exports.clause_loader_get = (req, res, next) => {
   res.render('clause_loader', {
@@ -455,8 +331,6 @@ if (!relationshipToFPCFound) {
   // For debugging/demo purposes:
   console.log("English table rows:", englishRows);
   console.log("French table rows:", frenchRows);
-
-  // Return or process as needed
   updateData(englishRows);
   updateData(frenchRows);
   return { englishRows, frenchRows };
