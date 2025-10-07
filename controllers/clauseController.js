@@ -485,14 +485,6 @@ async function updateData(rows) {
   if (!Array.isArray(rows)) return;
   for (const row of rows) {
     if (!row.number) continue;
-    // Build update object based on available fields
-//    let update = {};
-    //if (row.name !== undefined) update.name = row.name;
-    //if (row.description !== undefined) update.description = row.description;
-    //if (row.compliance !== undefined) update.compliance = row.compliance;
-    //if (row.frName !== undefined) update.frName = row.frName;
-    //if (row.frDescription !== undefined) update.frDescription = row.frDescription;
-    //if (row.frCompliance !== undefined) update.frCompliance = row.frCompliance;
     // Find and update the clause by number
     await Clause.findOneAndUpdate(
       { number: row.number },

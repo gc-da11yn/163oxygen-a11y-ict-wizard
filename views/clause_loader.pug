@@ -12,4 +12,9 @@ block form
     .form-group
       label(for= "frenchfile") Upload the new French word file
       input(type="file" id="frenchfile" name="frenchfile" accept=".docx")
-    button.btn.btn-primary(type='submit') Submit
+    button.btn.btn-primary(id='clause-loader-submit',type='submit') Submit
+  section.wb-overlay.modal-content.overlay-def.wb-popup-mid#modal-clauseLoader(role='dialog')
+    header.modal-header
+      h2.modal-title Results of clause loader
+      .modal-body
+        div(class="modal-body", id="dialog")
