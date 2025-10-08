@@ -2,8 +2,6 @@ const async = require('async');
 const mongoose = require('mongoose');
 const fs = require("fs");
 const mammoth = require("mammoth");
-
-
 const { JSDOM } = require('jsdom');
 const innertext = require('innertext');
 
@@ -262,9 +260,6 @@ exports.clause_loader_get = (req, res, next) => {
 
 
 async function updateFromWordFiles(englishFile, frenchFile) {
-  const mammoth = require("mammoth");
-  const { JSDOM } = require("jsdom");
-
   // 1. Convert both files to HTML strings using mammoth
   const englishHtmlResult = await mammoth.convertToHtml({ buffer: englishFile.buffer });
   const frenchHtmlResult = await mammoth.convertToHtml({ buffer: frenchFile.buffer });
@@ -328,9 +323,6 @@ if (!relationshipToFPCFound) {
     frCompliance: row.compliance
   }));
 
-  // For debugging/demo purposes:
-  console.log("English table rows:", englishRows);
-  console.log("French table rows:", frenchRows);
   updateData(englishRows);
   updateData(frenchRows);
   return { englishRows, frenchRows };
