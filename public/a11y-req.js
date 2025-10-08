@@ -14,7 +14,8 @@ $(document).on("wb-ready.wb", function (event) {
   setupQuestionHandler();
 
   setupRestoreJSONHandler();
-
+  showHideHandler();
+  // remove later  
   showRemoved();
 
   hideRemoved();
@@ -1125,3 +1126,52 @@ var sendFileToServer = function () {
 //     updateAriaChecked($(this));
 //   });
 // };
+function showHideHandler() {
+  $(function () {
+    $('#toggleAutoHiddenOptionsStep1').on('click', function (e) {
+      e.preventDefault();
+      var $btn = $(this);
+      // Use aria-pressed for toggle buttons, not aria-checked
+      var pressed = $btn.attr('aria-pressed') === 'true';
+      if (!pressed) {
+        showCheckboxes(1);
+        $btn.attr('aria-pressed', 'true').addClass('active');
+      } else {
+        hideCheckboxes(1);
+        $btn.attr('aria-pressed', 'false').removeClass('active');
+      }
+    });
+  });
+}
+function showCheckboxes(step) {
+  let stepQuery = [
+    '.isUber:checked'
+  ];
+  $('.wizard input' + stepQuery[step-1]).filter(function () {
+    return $(this).attr('aria-disabled') === 'true';
+  }).each(function () {
+    var questionId = this.id;
+    var $element = $('.checkbox-' + questionId);
+    $element.removeClass('hidden');
+  });
+  $('.disabledQuestions').removeClass('hidden');
+  $('.disabledQuestions').text("Disable questions are now shown.");
+  setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
+
+}
+function hideCheckboxes(step) {
+  console.log("inhide");
+  let stepQuery = [
+    '.isUber:checked'
+  ];
+  $('.wizard input' + stepQuery[step-1]).filter(function () {
+    return $(this).attr('aria-disabled') === 'true';
+  }).each(function () {
+    var questionId = this.id;
+    var $element = $('.checkbox-' + questionId);
+    $element.addClass('hidden');
+  });
+  $('.disabledQuestions').removeClass('hidden');
+  $('.disabledQuestions').text("Disable questions are now hidden.");
+  setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
+}
