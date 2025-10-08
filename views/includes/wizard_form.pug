@@ -50,8 +50,6 @@ section.wizard
       .btn-group(style="margin-left : 15px")
         button#undoLastStep1(class="btn btn-default") Undo
       .btn-group(style="margin-left : 15px")
-        button#showAllRemovedStep1(class="btn btn-default") Show removed
-        button#hideAllRemovedStep1(class="btn btn-default" style="margin-left : 3px")  Hide removed
         button#toggleAutoHiddenOptionsStep1(
           type="button"
           role="button"
@@ -80,8 +78,13 @@ section.wizard
       .btn-group(style="margin-left : 15px")
         button#undoLastStep2(class="btn btn-default") Undo
       .btn-group(style="margin-left : 15px")
-        button#showAllRemovedStep2(class="btn btn-default") Show removed
-        button#hideAllRemovedStep2(class="btn btn-default" style="margin-left : 3px")  Hide removed
+        button#toggleAutoHiddenOptionsStep2(
+          type="button"
+          role="button"
+          class="btn btn-default"
+          aria-pressed="false" 
+          style="margin-left:10px"
+        ) Show Automatically Hidden options
       <br/>
       div(aria-atomic="true" aria-live="polite")
         p.clause-count
@@ -103,8 +106,13 @@ section.wizard
       .btn-group(style="margin-left : 15px")
         button#undoLastStep3(class="btn btn-default") Undo
       .btn-group(style="margin-left : 15px")
-        button#showAllRemovedStep3(class="btn btn-default") Show removed
-        button#hideAllRemovedStep3(class="btn btn-default" style="margin-left : 3px")  Hide removed
+        button#toggleAutoHiddenOptionsStep3(
+          type="button"
+          role="button"
+          class="btn btn-default"
+          aria-pressed="false" 
+          style="margin-left:10px"
+        ) Show Automatically Hidden options
       <br/>
       div(aria-atomic="true" aria-live="polite")
         p.clause-count
