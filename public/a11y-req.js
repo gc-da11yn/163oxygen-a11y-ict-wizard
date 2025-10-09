@@ -14,10 +14,10 @@ $(document).on("wb-ready.wb", function (event) {
   setupQuestionHandler();
 
   setupRestoreJSONHandler();
-
   showRemoved();
-
   hideRemoved();
+  //used for steps 1 to 3
+  setupShowHideHandler();
 
   undoHandler();
 
@@ -205,48 +205,6 @@ var selectClauses = function (clauses, select) {
 }
 
 var showRemoved = function () {
-  $('#showAllRemovedStep1').click(function (e) {
-    e.preventDefault();
-    $('.wizard input.isUber:checked').filter(function () {
-      return $(this).attr('aria-disabled') === 'true';
-    }).each(function () {
-      var questionId = this.id;
-      var $element = $('.checkbox-' + questionId);
-      $element.removeClass('hidden');
-    });
-    $('.disabledQuestions').removeClass('hidden');
-    $('.disabledQuestions').text("Disable questions are now shown.");
-    setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
-  });
-
-  $('#showAllRemovedStep2').click(function (e) {
-    e.preventDefault();
-    $('.wizard input:checked').not('.isUber').not('.isUnique').filter(function () {
-      return $(this).attr('aria-disabled') === 'true';
-    }).each(function () {
-      var questionId = this.id;
-      var $element = $('.checkbox-' + questionId);
-      $element.removeClass('hidden');
-    });
-    $('.disabledQuestions').removeClass('hidden');
-    $('.disabledQuestions').text("Disable questions are now shown.");
-    setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
-  });
-
-  $('#showAllRemovedStep3').click(function (e) {
-    e.preventDefault();
-    $('.wizard input:checked').filter('.isUnique').filter(function () {
-      return $(this).attr('aria-disabled') === 'true';
-    }).each(function () {
-      var questionId = this.id;
-      var $element = $('.checkbox-' + questionId);
-      $element.removeClass('hidden');
-    });
-    $('.disabledQuestions').removeClass('hidden');
-    $('.disabledQuestions').text("Disable questions are now shown.");
-    setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
-  });
-
   $('#showAllRemovedClauses').click(function (e) {
     e.preventDefault();
     $('#clauses input:not(:checked)').each(function () {
@@ -267,48 +225,6 @@ var showRemoved = function () {
 }
 
 var hideRemoved = function () {
-  $('#hideAllRemovedStep1').click(function (e) {
-    e.preventDefault();
-    $('.wizard input.isUber:checked').filter(function () {
-      return $(this).attr('aria-disabled') === 'true';
-    }).each(function () {
-      var questionId = this.id;
-      var $element = $('.checkbox-' + questionId);
-      $element.addClass('hidden');
-    });
-    $('.disabledQuestions').removeClass('hidden');
-    $('.disabledQuestions').text("Disable questions are now hidden.");
-    setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
-  });
-
-  $('#hideAllRemovedStep2').click(function (e) {
-    e.preventDefault();
-    $('.wizard input:checked').not('.isUber').not('.isUnique').filter(function () {
-      return $(this).attr('aria-disabled') === 'true';
-    }).each(function () {
-      var questionId = this.id;
-      var $element = $('.checkbox-' + questionId);
-      $element.addClass('hidden');
-    });
-    $('.disabledQuestions').removeClass('hidden');
-    $('.disabledQuestions').text("Disable questions are now hidden.");
-    setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
-  });
-
-  $('#hideAllRemovedStep3').click(function (e) {
-    e.preventDefault();
-    $('.wizard input:checked').filter('.isUnique').filter(function () {
-      return $(this).attr('aria-disabled') === 'true';
-    }).each(function () {
-      var questionId = this.id;
-      var $element = $('.checkbox-' + questionId);
-      $element.addClass('hidden');
-    });
-    $('.disabledQuestions').removeClass('hidden');
-    $('.disabledQuestions').text("Disable questions are now hidden.");
-    setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
-  });
-
   $('#hideAllRemovedClauses').click(function (e) {
     e.preventDefault();
     $('#clauses input:not(:checked)').each(function () {
@@ -1102,6 +1018,101 @@ var sendFileToServer = function () {
   }
 }
 
+
+/* Generator question handling */
+
+// var setupQuestionHandler = function () {
+//   // #question is the <select> element (see /views/select_fps.pug)
+//   $('#question').change(function () { updateQuestionSelections(); });
+// };
+
+// var updateQuestionSelections = function () {
+//   var question = $('#question').val();
+//   // Save existing selections
+
+//   // Uncheck all checkboxes
+//   $('#clauses input').prop('checked', false);
+//   // Get hidden question data (see /views/select_fps.pug)
+//   $('#' + question + ' li').each(function () {
+//     // Check the question checkboxes
+//     $('#' + this.innerHTML).prop('checked', true);
+//   });
+//   $('[role="treeitem"]').each(function () {
+//     updateAriaChecked($(this));
+//   });
+// };
+function setupShowHideHandler() {
+  $(function () {
+    $('#toggleAutoHiddenOptionsStep1').on('click', function (e) {
+      e.preventDefault();
+      var $btn = $(this);
+      var pressed = $btn.attr('aria-pressed') === 'true';
+      var $checkboxes = $('.wizard input.isUber:checked');
+      if (!pressed) {
+        showCheckboxes($checkboxes);
+        $btn.attr('aria-pressed', 'true').addClass('active');
+      } else {
+        hideCheckboxes($checkboxes);
+        $btn.attr('aria-pressed', 'false').removeClass('active');
+      }
+    });
+  });
+  $(function () {
+    $('#toggleAutoHiddenOptionsStep2').on('click', function (e) {
+      e.preventDefault();
+      var $btn = $(this);
+      var pressed = $btn.attr('aria-pressed') === 'true';
+      var $checkboxes = $('.wizard input:checked').not('.isUber').not('.isUnique');
+      if (!pressed) {
+        showCheckboxes($checkboxes);
+        $btn.attr('aria-pressed', 'true').addClass('active');
+      } else {
+        hideCheckboxes($checkboxes);
+        $btn.attr('aria-pressed', 'false').removeClass('active');
+      }
+    });
+  });
+  $(function () {
+    $('#toggleAutoHiddenOptionsStep3').on('click', function (e) {
+      e.preventDefault();
+      var $btn = $(this);
+      var pressed = $btn.attr('aria-pressed') === 'true';
+      var $checkboxes = $('.wizard input:checked').filter('.isUnique');
+      if (!pressed) {
+        showCheckboxes($checkboxes);
+        $btn.attr('aria-pressed', 'true').addClass('active');
+      } else {
+        hideCheckboxes($checkboxes);
+        $btn.attr('aria-pressed', 'false').removeClass('active');
+      }
+    });
+  });
+}
+function showCheckboxes(checkboxes) {
+  checkboxes.filter(function () {
+    return $(this).attr('aria-disabled') === 'true';
+  }).each(function () {
+    var questionId = this.id;
+    var $element = $('.checkbox-' + questionId);
+    $element.removeClass('hidden');
+  });
+  $('.disabledQuestions').removeClass('hidden');
+  $('.disabledQuestions').text("Disable questions are now shown.");
+  setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
+
+}
+function hideCheckboxes(checkboxes) {
+  checkboxes.filter(function () {
+    return $(this).attr('aria-disabled') === 'true';
+  }).each(function () {
+    var questionId = this.id;
+    var $element = $('.checkbox-' + questionId);
+    $element.addClass('hidden');
+  });
+  $('.disabledQuestions').removeClass('hidden');
+  $('.disabledQuestions').text("Disable questions are now hidden.");
+  setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
+}
 // Clause loader modal handler
 $(function () {
   var $form = $('form[action="clause_loader"][enctype="multipart/form-data"]');
