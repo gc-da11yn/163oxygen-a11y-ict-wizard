@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() }); // or configure as needed
 
 // Require controller modules.
 const clause_controller = require('../controllers/clauseController');
@@ -23,8 +25,11 @@ router.post('/infosrestore', info_controller.info_json_restore_post);
 // GET request for list of all Clauses
 router.get('/clauses', clause_controller.clause_list);
 
+
 // GET request for creating a Clause
 router.get('/clause/create', clause_controller.clause_create_get);
+// GET for clause loader
+router.get('/clause_loader', clause_controller.clause_loader_get);
 
 // POST request for creating a Clause
 router.post('/clause/create', clause_controller.clause_create_post);
@@ -34,16 +39,18 @@ router.get('/clause/:id', clause_controller.clause_update_get);
 
 // POST request to edit Clause
 router.post('/clause/:id', clause_controller.clause_update_post);
+// post for clause loader
+router.post('/clause_loader', upload.fields([
+  { name: 'englishfile', maxCount: 1 },
+  { name: 'frenchfile', maxCount: 1 }
+]), clause_controller.clause_loader_post);
+
 
 // GET request to delete Clause
 router.get('/clause/:id/delete', clause_controller.clause_delete_get);
 
 // POST request to delete Clause
 router.post('/clause/:id/delete', clause_controller.clause_delete_post);
-
-// Populate database with Clauses from HTML tables
-// (Uncomment if necessary to re-populate the database)
-router.get('/clauses/populate', clause_controller.clause_populate);
 
 
 /* Informative Sections */

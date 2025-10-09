@@ -1,6 +1,7 @@
 const async = require('async');
 const mongoose = require('mongoose');
-
+const fs = require("fs");
+const mammoth = require("mammoth");
 const { JSDOM } = require('jsdom');
 const innertext = require('innertext');
 
@@ -15,16 +16,17 @@ const strings = {
   deleteClause: 'Delete clause',
   editClause: 'Edit clause',
   clauseNotFound: 'Clause not found',
-  updateClause: 'Update clause'
+  updateClause: 'Update clause',
+  clauseloader: 'bulk clause loader'
 }
 
-exports.clause_json_restore_post= (req, res, next) => {
+exports.clause_json_restore_post = (req, res, next) => {
   console.log("In server. Form data");
   const JavaClauseFile = req.body;
 
   function convertToMongoFormat(javaContent) {
     try {
-      return javaContent.map(item => { 
+      return javaContent.map(item => {
         if (item._id && item._id.$oid) {
           let clauseOID = item._id.$oid
           item._id = mongoose.Types.ObjectId(clauseOID);
@@ -52,32 +54,32 @@ exports.clause_json_restore_post= (req, res, next) => {
   }
 
   updateClauseCollection()
-    .then(() => res.json({ message: 'Data updated successfully. Please note that when you close this modal the page will refresh to show the updated data.', success: true  }))
+    .then(() => res.json({ message: 'Data updated successfully. Please note that when you close this modal the page will refresh to show the updated data.', success: true }))
     .catch((err) => res.status(500).json({ message: 'Error updating data.', success: false }));
 }
 
 exports.clause_json_get = (req, res, next) => {
 
   Clause.find()
-  .sort([['number', 'ascending']])
-  .lean()
-  .exec((err, clauses) => {
-    if (err) {
-      return next(err);
-    }
+    .sort([['number', 'ascending']])
+    .lean()
+    .exec((err, clauses) => {
+      if (err) {
+        return next(err);
+      }
 
-    const transformedClauses = clauses.map(clause => {
-      clause._id = { "$oid": clause._id.toString() };
+      const transformedClauses = clauses.map(clause => {
+        clause._id = { "$oid": clause._id.toString() };
 
-      return clause;
+        return clause;
+      });
+
+      const clausesData = JSON.stringify(transformedClauses, null, 2);
+
+      // Send the data as a downloadable file
+      res.setHeader('Content-disposition', 'attachment; filename=clauses_list.json');
+      res.send(clausesData);
     });
-
-    const clausesData = JSON.stringify(transformedClauses, null, 2);
-    
-    // Send the data as a downloadable file
-    res.setHeader('Content-disposition', 'attachment; filename=clauses_list.json');
-    res.send(clausesData);
-  });
 };
 
 // Display list of all Clauses
@@ -243,126 +245,117 @@ exports.clause_delete_post = (req, res, next) => {
   });
 };
 
-// Populate clauses from HTML files
-// HTML converted from Word at docconverter.pro
-exports.clause_populate = (req, res, next) => {
-
-  // Convert HTML to array of objects following database schema:
-  /* clause = {
-    number: c.number,
-    name: c.name,
-    frName: c.frName,
-    informative: c.informative === 'on',
-    description: c.description,
-    frDescription: c.frDescription,
-    compliance: c.compliance,
-    frCompliance: c.frCompliance
-  } */
-
-  JSDOM.fromFile('english.html').then(dom => {
-    console.log("file loaded");
-    let document = dom.window.document;
-
-    // Replace DOM body with modified htmlString
-    let htmlString = document.querySelector('body').innerHTML;
-    document.querySelector('body').innerHTML = regexHtml(htmlString);
-
-    // Extract clauses
-    let clauses = [];
-    let rows = document.querySelectorAll('tbody tr');
-    for (let i = 0; i < rows.length; i++) {
-      let clause = {};
-      let cells = rows[i].querySelectorAll('td');
-      // Extract clause information from HTML and add to clause object
-      let descriptionCell = cells[0];
-      let complianceCell = cells[1];
-      let clauseNameNumber = innertext(descriptionCell.querySelector('p').innerHTML).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      clause.number = clauseNameNumber.substr(0, clauseNameNumber.indexOf(" "));
-      clause.name = clauseNameNumber.substr(clauseNameNumber.indexOf(" ") + 1);
-      clause.informative = clauseNameNumber.indexOf("nformative") > -1;
-      let descriptionHTML = descriptionCell.innerHTML;
-      clause.description = descriptionHTML.substr(descriptionHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      let complianceHTML = complianceCell.innerHTML;
-      clause.compliance = complianceHTML.substr(complianceHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      clauses.push(clause);
-    }
-
-    // Add French HTML content, asserting that clause numbers are equal
-    JSDOM.fromFile('french.html').then(dom => {
-      let document = dom.window.document;
-
-      // Replace DOM body with modified htmlString
-      let htmlString = document.querySelector('body').innerHTML;
-      document.querySelector('body').innerHTML = regexHtml(htmlString);
-
-      // Extract clauses
-      let rows = document.querySelectorAll('tbody tr');
-      console.log(`English clauses length is ${clauses.length}, french rows is ${rows.length}`);
-      for (let i = 0; i < rows.length; i++) {
-        // Get clause with English information
-        let clause = clauses[i];
-        let cells = rows[i].querySelectorAll('td');
-        // Extract clause information from HTML and add to clause object
-        let descriptionCell = cells[0];
-        let complianceCell = cells[1];
-        let clauseNameNumber = innertext(descriptionCell.querySelector('p').innerHTML).replace(/(\r\n|\n|\r)/gm, " ").trim();
-        clause.frName = clauseNameNumber.substr(clauseNameNumber.indexOf(" ") + 1);
-        let descriptionHTML = descriptionCell.innerHTML;
-        clause.frDescription = descriptionHTML.substr(descriptionHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-        let complianceHTML = complianceCell.innerHTML;
-        clause.frCompliance = complianceHTML.substr(complianceHTML.indexOf('</p>') + 4).replace(/(\r\n|\n|\r)/gm, " ").trim();
-      }
-
-      // Array of clauses is now populated. Insert documents in database.
-      for (c of clauses) {
-        let clause = new Clause(c);
-
-        clause.save((err) => {
-          if (err) { return next(err); }
-          // Clause saved
-          // console.log(`Inserted clause: ${clause.number} ${clause.name}`);
-        });
-      }
-      res.redirect('/edit/clauses'); // Success - go to clause list
-    });
+// Display clause loader form on GET
+exports.clause_loader_get = (req, res, next) => {
+  res.render('clause_loader', {
+    title: strings.clauseloader,
+    breadcrumbs: [
+      { url: '/', text: 'Home' },
+      { url: '/edit', text: 'Edit content' },
+      { url: '/edit/clause_loader', text: 'Bulk clause loader' }
+    ]
   });
-
 };
 
-// Replaces:
 
-// <p class="NormalBOLD"(.*?)>\n(.*?)\n(.*?)</p>
-// <p><strong>$2</strong></p>
 
-// <td[^>]*> replaced with <td>
-// <p[^>]*> replaced with <p>
-// <ul[^>]*> replaced with <ul>
-// <li[^>]*> replaced with <li>
-// <span[^>]*> replaced with (nothing)
-// </span> replaced with (nothing)
+async function updateFromWordFiles(englishFile, frenchFile) {
+  // 1. Convert both files to HTML strings using mammoth
+  const englishHtmlResult = await mammoth.convertToHtml({ buffer: englishFile.buffer });
+  const frenchHtmlResult = await mammoth.convertToHtml({ buffer: frenchFile.buffer });
+  const englishHtml = englishHtmlResult.value;
+  const frenchHtml = frenchHtmlResult.value;
 
-// <ol style="margin:0pt; padding-left:0pt; list-style-type:lower-latin">
-// <ol style="list-style-type:lower-latin">
+  // 2. Extract only the first table in each file
+  const englishDom = new JSDOM(englishHtml);
+  const frenchDom = new JSDOM(frenchHtml);
 
-// \n and \t replaced with " "
-// "  " replaced with " " until none left
-// </ol> <ol(.*?)> replaced with (nothing)
-// <li> <p>(.+?)</p> replaced with <li>$1</li>
-const regexHtml = function(htmlString) {
-  // Perform string replaces as described above on htmlString
-  htmlString = htmlString.replace(/\s\s+/gm, ' ');
-  htmlString = htmlString.replace(/<p class="NormalBOLD"(.*?)> (.*?) <\/p>/gm, '<p><strong>$2</strong></p>');
-  htmlString = htmlString.replace(/<td(.*?)>/gm, '<td>');
-  htmlString = htmlString.replace(/<p(.*?)>/gm, '<p>');
-  htmlString = htmlString.replace(/<ul(.*?)>/gm, '<ul>');
-  htmlString = htmlString.replace(/<li(.*?)>/gm, '<li>');
-  htmlString = htmlString.replace(/<span(.*?)>/gm, '');
-  htmlString = htmlString.replace(/<\/span>/gm, '');
-  htmlString = htmlString.replace(/<ol style="margin:0pt; padding-left:0pt; list-style-type:lower-latin">/gm, '<ol style="list-style-type:lower-alpha">');
-  htmlString = htmlString.replace(/<\/ol> <ol(.*?)>/gm, '');
-  htmlString = htmlString.replace(/<a(.*?)style="(.*?)"/gm, '<a$1');
-  htmlString = htmlString.replace(/\.<\/a>/gm, '</a>.');
-  htmlString = htmlString.replace(/\. <\/a>/gm, '</a>.');
-  console.log(htmlString.substring(0,1000));
-  return htmlString;
+  const englishTable = englishDom.window.document.querySelector("table");
+  const frenchTable = frenchDom.window.document.querySelector("table");
+
+  // 3. Break down each table into an array containing the HTML contents of each row and parse fields
+  function extractRows(tableElement) {
+    if (!tableElement) return [];
+    const rows = Array.from(tableElement.querySelectorAll("tr"));
+    return rows.map(row => {
+      const cells = Array.from(row.querySelectorAll("td"));
+      if (cells.length === 0) return null;
+      const htmlBlob = cells[0].innerHTML;
+
+      // Create a temporary DOM to parse the HTML blob
+      const tempDiv = tableElement.ownerDocument.createElement('div');
+      tempDiv.innerHTML = htmlBlob;
+      let number = '', name = '', description = '', compliance = '';
+      // number and name
+  const firstLine = tempDiv.firstChild.textContent.trim();
+        const spaceId = firstLine.indexOf(' ');
+        if (spaceId> 0) {
+          number = firstLine.substring(0, spaceId).trim();
+          name = firstLine.substring(spaceId+ 1).trim();
+        }
+        // description and compliance 
+        const children = tempDiv.childNodes;
+        let relationshipToFPCFound = false;
+        for (let i =1; i<children.length; i++) {
+          if (children[i].textContent.startsWith("Relationship to Functional Performance Criteria") || children[i].textContent.startsWith("Relation avec")) {
+            relationshipToFPCFound = true;
+            // continue as we don't wish to add this child to either description or compliance
+continue;
+}
+if (!relationshipToFPCFound) {
+          description += children[i].outerHTML;
+} else {
+  compliance += children[i].outerHTML;
+}
+        }  //for loop     
+      return { number, name, description, compliance };
+    }).filter(Boolean);
+  }
+
+  const englishRows = extractRows(englishTable);
+  let frenchRows = extractRows(frenchTable);
+
+  // Map frenchRows to rename fields as required
+  frenchRows = frenchRows.map(row => ({
+    number: row.number,
+    frName: row.name,
+    frDescription: row.description,
+    frCompliance: row.compliance
+  }));
+
+  updateData(englishRows);
+  updateData(frenchRows);
+  return { englishRows, frenchRows };
+}
+
+// handle the post for clause loader. This is where the file is recieved and processed.
+exports.clause_loader_post = async (req, res, next) => {
+  const files = req.files;
+  if (!files || !files.englishfile || !files.frenchfile) {
+    return res.status(400).send('Both English and French files are required.');
+  }
+  const englishFile = files.englishfile[0];
+  const frenchFile = files.frenchfile[0];
+  console.log('English file:', englishFile.originalname, 'size:', englishFile.size);
+  console.log('French file:', frenchFile.originalname, 'size:', frenchFile.size);
+
+  try {
+    await updateFromWordFiles(englishFile, frenchFile);
+    res.send('Files uploaded and processed successfully.');
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function updateData(rows) {
+  if (!Array.isArray(rows)) return;
+  for (const row of rows) {
+    if (!row.number) continue;
+    // Find and update the clause by number
+    await Clause.findOneAndUpdate(
+      { number: row.number },
+      { $set: row},
+      { new: true }
+    ).exec();
+  }
 }

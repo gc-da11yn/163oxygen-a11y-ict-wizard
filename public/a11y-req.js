@@ -1102,26 +1102,39 @@ var sendFileToServer = function () {
   }
 }
 
+// Clause loader modal handler
+$(function () {
+  var $form = $('form[action="clause_loader"][enctype="multipart/form-data"]');
+  if ($form.length) {
+    $form.on('submit', function (e) {
+      e.preventDefault();
+      var formData = new FormData(this);
+      var $submitBtn = $(this).find('button[type="submit"]');
+      $submitBtn.prop('disabled', true);
 
-/* Generator question handling */
-
-// var setupQuestionHandler = function () {
-//   // #question is the <select> element (see /views/select_fps.pug)
-//   $('#question').change(function () { updateQuestionSelections(); });
-// };
-
-// var updateQuestionSelections = function () {
-//   var question = $('#question').val();
-//   // Save existing selections
-
-//   // Uncheck all checkboxes
-//   $('#clauses input').prop('checked', false);
-//   // Get hidden question data (see /views/select_fps.pug)
-//   $('#' + question + ' li').each(function () {
-//     // Check the question checkboxes
-//     $('#' + this.innerHTML).prop('checked', true);
-//   });
-//   $('[role="treeitem"]').each(function () {
-//     updateAriaChecked($(this));
-//   });
-// };
+      fetch($form.attr('action'), {
+        method: 'POST',
+        body: formData
+      })
+        .then(async response => {
+          let msg;
+          if (response.headers.get('content-type') && response.headers.get('content-type').includes('application/json')) {
+            const data = await response.json();
+            msg = data.message || JSON.stringify(data);
+          } else {
+            msg = await response.text();
+          }
+          // Show modal and set message
+          $('#dialog').text(msg);
+          $('#modal-clauseLoader').trigger('open.wb-overlay');
+        })
+        .catch(() => {
+          $('#dialog').text('An error occurred while uploading the files.');
+          $('#modal-clauseLoader').trigger('open.wb-overlay');
+        })
+        .finally(() => {
+          $submitBtn.prop('disabled', false);
+        });
+    });
+  }
+});
