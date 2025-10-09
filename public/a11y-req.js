@@ -1113,3 +1113,39 @@ function hideCheckboxes(checkboxes) {
   $('.disabledQuestions').text("Disable questions are now hidden.");
   setTimeout(function () { $('.disabledQuestions').addClass('hidden'); }, 500);
 }
+// Clause loader modal handler
+$(function () {
+  var $form = $('form[action="clause_loader"][enctype="multipart/form-data"]');
+  if ($form.length) {
+    $form.on('submit', function (e) {
+      e.preventDefault();
+      var formData = new FormData(this);
+      var $submitBtn = $(this).find('button[type="submit"]');
+      $submitBtn.prop('disabled', true);
+
+      fetch($form.attr('action'), {
+        method: 'POST',
+        body: formData
+      })
+        .then(async response => {
+          let msg;
+          if (response.headers.get('content-type') && response.headers.get('content-type').includes('application/json')) {
+            const data = await response.json();
+            msg = data.message || JSON.stringify(data);
+          } else {
+            msg = await response.text();
+          }
+          // Show modal and set message
+          $('#dialog').text(msg);
+          $('#modal-clauseLoader').trigger('open.wb-overlay');
+        })
+        .catch(() => {
+          $('#dialog').text('An error occurred while uploading the files.');
+          $('#modal-clauseLoader').trigger('open.wb-overlay');
+        })
+        .finally(() => {
+          $submitBtn.prop('disabled', false);
+        });
+    });
+  }
+});

@@ -1,0 +1,20 @@
+extends item_form
+
+block form
+  p This feature requires the user to upload two word documents which has the new wording you would like for the clauses in the database. The first document should be the English version and the second document should be the French version. The documents must be in  a similar format to the output of this tool. 
+  p This loader will use the existing database entries to search the uploaded word documents for changes and completely overwrite the existing database entries with the new wording. It is CRITICAL to back up the database before using this feature so that if the import fails you can revert to the previous state.
+  p The loader will not add or remove clauses, it will only update the wording of existing clauses. If you need to add or remove clauses you must do this manually using the Edit clauses feature.
+  p THIS IS A PERMINATE CHANGE TO THE DATABASE. THERE IS NO UNDO FEATURE. BACK UP YOUR DATABASE BEFORE USING THIS FEATURE.
+  form(method='POST' action='clause_loader' enctype="multipart/form-data")
+    .form-group
+      label(for= "englishfile") Upload the new English word file
+      input(type="file" id="englishfile" name="englishfile" accept=".docx")
+    .form-group
+      label(for= "frenchfile") Upload the new French word file
+      input(type="file" id="frenchfile" name="frenchfile" accept=".docx")
+    button.btn.btn-primary(id='clause-loader-submit',type='submit') Submit
+  section.wb-overlay.modal-content.overlay-def.wb-popup-mid#modal-clauseLoader(role='dialog')
+    header.modal-header
+      h2.modal-title Results of clause loader
+      .modal-body
+        div(class="modal-body", id="dialog")
